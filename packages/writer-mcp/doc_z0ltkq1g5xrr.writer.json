@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 1,
+  "docId": "doc_z0ltkq1g5xrr",
+  "title": "[AI 시대, 구현보단 설계 관점] 왜 함수형이었을까? — 2",
+  "activePersonaId": "persona_fux5ji2t3k0d",
+  "blocks": [
+    {
+      "id": "d105c79f-2ef0-42c8-9078-ac35abcd312f",
+      "type": "heading",
+      "props": {
+        "textAlign": "left",
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "0. 지난 글 끝에서 바로 이어서",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "b81dcc88-d30c-4a82-9a24-05502b720b8d",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "지난 글의 마지막에서 이런 질문을 남겼어요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "928cba8d-df85-43ac-84da-36e452caf080",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "UI가 현재 입력의 결과라면, 이 결과는 언제 계산해야 하고, 그 타이밍은 누가 가져가야 할까?",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "9887bcc2-f385-4ba7-a5ee-0fe8f20adf79",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "이번 글은 그 질문에서 바로 이어져요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "5906a5ea-3169-46e2-b5ff-af0e1584b3ae",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "다만 여기서 한 가지 찜찜함이 남아요. 1편의 설명은 분명 맞는데, 내가 겪은 예전 React는 그렇게까지 깔끔한 계산 모델처럼 느껴지지 않았다는 점이에요. class 컴포넌트를 쓰던 시절엔 this.state를 붙잡고, 라이프사이클 안에서 이전 props와 다음 props를 비교하고, 필요하면 setState를 섞어 가며 상태를 맞추는 일이 훨씬 앞에 있었죠. React 팀이 나중에 legacy lifecycle을 정리하고, props를 state로 복사하는 패턴을 반복해서 경계한 것도 그런 개발 경험이 React가 가려던 방향과 조금씩 어긋나고 있었다는 뜻에 가깝다고 생각해요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "5e161683-9777-4458-bc01-0030f7fe761a",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "그래서 이번 글은 \"React는 처음부터 지금 같은 함수형 라이브러리였다\"는 이야기를 하려는 게 아니에요. 오히려 반대예요. React는 오래전부터 UI를 계산으로 보고 싶어 했지만, 개발자가 실제로 다루던 방식은 한동안 그 생각을 매끈하게 보여 주지 못했어요. 그리고 시간이 갈수록 그 간극이 더 선명해졌다는 쪽이 지금의 React를 설명하는 데 더 잘 맞아요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "13fa6e1e-1b89-43bf-8fea-a727484d9f09",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [],
+      "children": []
+    },
+    {
+      "id": "7dcbaa90-273d-4b0e-b537-7884c9f96774",
+      "type": "heading",
+      "props": {
+        "textAlign": "left",
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "1. React가 가져오려던 건 function이 아니라 render의 타이밍이었어요",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "976bfe92-e97b-4fc0-bc39-1463980f5679",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "이걸 이해하려면 React가 처음부터 뭘 더 가지고 오고 싶어 했는지부터 봐야 해요. Design Principles에는 팀 안에서 \"React should have been called Schedule\"이라는 농담이 나온다고 적혀 있어요. React는 스스로를 완전히 reactive한 시스템으로 보지 않았고, 사용자 코드가 가능한 한 빨리 React에게 제어권을 돌려주길 원했어요. 그래야 작업을 나누고, 우선순위를 매기고, 필요하면 미루는 일까지 라이브러리 쪽에서 맡을 수 있으니까요. 같은 문서가 setState()를 \"값을 즉시 바꾸는 명령\"이 아니라 업데이트를 스케줄링하는 일로 설명하는 것도 같은 이유예요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "29e1b02a-959d-493f-8ad5-89f05ffa9f1c",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "이 지점을 1편의 말로 다시 옮기면 더 분명해져요. React는 \"지금 상태가 이러니 화면은 이렇게 보여야 한다\"는 계산과, \"그래서 실제 DOM을 언제 어떻게 바꿀까\"를 분리하려 했죠. 지금 공식 문서의 Render and Commit도 이 흐름을 trigger → render → commit으로 설명해요. React가 바꾸고 싶었던 건 문법 취향이 아니라 화면 계산 타이밍의 주도권이었어요. 개발자가 매번 직접 순서를 짜는 대신, React가 필요할 때 계산을 다시 돌리고, 묶고, 미루고, 나중에 반영할 수 있어야 했다는 거죠.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "40738ffb-7e8c-46ac-9b81-d4aa67b97d04",
+      "type": "heading",
+      "props": {
+        "textAlign": "left",
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "2. 그래서 render는 다시 실행해도 안전해야 했어요",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "0731431b-68a2-4921-a83a-2a98cb4bc47c",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "이제 왜 render purity가 중요해졌는지가 나와요. Components and Hooks Must Be Pure 문서는 컴포넌트와 훅이 같은 입력에 같은 결과를 내야 한다고 설명해요. Keeping Components Pure도 render는 기존에 있던 값을 바꾸지 말고 결과만 계산해야 한다고 말하죠. 이유는 간단해요. React가 render를 다시 호출해도 뜻이 흔들리지 않아야 하기 때문이에요. render가 바깥 값을 건드리거나, 호출 순서에 따라 다른 결과를 내거나, 실행할 때마다 다른 값을 섞어 버리면 React는 그 render를 마음대로 다룰 수 없어요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "95bb91b1-2e09-4331-be23-76c46df73d43",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "그래서 React는 state도 평범한 mutable 변수처럼 설명하지 않아요. State as a Snapshot은 state가 일반 변수보다 한 번의 render가 보고 있는 스냅샷에 가깝다고 설명해요. setter는 \"지금 이 값을 바꿔라\"가 아니라 \"다음 계산이 필요하다\"는 신호에 더 가깝고요. 이 관점으로 보면 각 render는 자기 시점의 props와 state를 가지고 화면을 계산하는 한 번의 호출이 돼요. React가 갈수록 원한 건 바로 이런 그림이었어요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "b4585b69-59c5-45dc-950b-42b6d6ca166e",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "Dan Abramov가 How Are Function Components Different from Classes?에서 말한 \"함수 컴포넌트는 그 render의 값들을 붙잡는다\"는 설명도 이걸 잘 보여 줘요. class는 this라는 오래 살아 있는 인스턴스를 중심에 놓기 쉽지만, 함수 컴포넌트는 매 render마다 무엇을 입력으로 받았고 어떤 값을 보고 있는지가 더 분명하죠. 그리고 이 가정은 생각보다 깊게 들어가 있어요. Hydration은 서버에서 나온 결과와 클라이언트의 첫 render 결과가 같아야 한다고 말하고, Strict Mode는 개발 중 render를 한 번 더 돌려 impure rendering을 드러내요. React는 꽤 오래전부터 \"다시 실행해도 안전한 render\"를 전제로 움직이고 있었어요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "f528de4f-6875-429f-bf25-fb58f0e9e1da",
+      "type": "heading",
+      "props": {
+        "textAlign": "left",
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "3. class가 점점 안 맞기 시작한 이유",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "0d2cc296-902b-48c0-8119-49ad54138c44",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "여기서 중요한 건 class가 틀린 문법이었다는 말이 아니라는 점이에요. 실제로 React 공식 문서도 render는 props, state, context가 같다면 같은 결과를 내는 pure function처럼 작성해야 한다고 설명해요. 문제는 문법보다 개발자가 어떤 식으로 생각하게 되느냐에 있었어요. class 시절에는 자연스럽게 인스턴스를 중심으로 보게 돼요. 지금 this.state가 뭔지, 새 props가 오면 어디서 맞출지, 어느 lifecycle에서 동기화할지, 이전 값과 다음 값을 어디서 비교할지가 먼저 떠오르죠. React가 가고 싶었던 쪽은 점점 \"이번 입력으로 어떤 화면이 나와야 하는가\"였는데, class는 개발자를 자꾸 \"현재 인스턴스를 어떻게 관리할까\" 쪽으로 끌어갔어요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "ad58bb97-104f-4d6c-9efb-df4dbc272f09",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "그래서 legacy lifecycle이 점점 불편해졌어요. Static Lifecycle Methods RFC는 componentWillMount, componentWillReceiveProps, componentWillUpdate 같은 메서드가 async rendering과 함께 가기엔 위험하다고 정리했고, You Probably Don't Need Derived State는 props를 state로 복사하는 패턴이 source of truth를 흐리고 미묘한 버그를 만들기 쉽다고 설명했어요. class가 갑자기 나쁜 기술이 된 게 아니라, React가 render를 더 자유롭게 다루려 할수록 class 시대의 전환 중심 코딩 방식이 점점 발목을 잡기 시작한 거에 가까워요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "156d00c5-c317-4db8-9566-7ee96578d2b3",
+      "type": "heading",
+      "props": {
+        "textAlign": "left",
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "4. Fiber가 이 요구를 실제 능력으로 만들었어요",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "70cbec92-155c-4ffe-8faf-457e1168e7d3",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "많은 사람들이 Fiber를 떠올리면 먼저 \"React가 빨라졌다\"를 생각해요. 물론 성능과 무관하진 않지만, 그 설명만으로는 부족해요. React Fiber Architecture 문서는 Fiber의 headline feature를 incremental rendering이라고 설명해요. 렌더링 작업을 잘게 나누고, 여러 프레임에 걸쳐 퍼뜨리고, 필요하면 pause, abort, reuse할 수 있게 만드는 쪽이 핵심이라는 거죠.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "bba781cd-4063-4260-905a-94c6f5102e2f",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "이걸 오늘의 말로 풀어 주는 게 React v18 블로그 포스트예요. 여기서 concurrent rendering의 핵심 성질을 interruptible rendering이라고 설명해요. React는 render를 시작했다가 중간에 멈출 수 있고, 나중에 이어서 할 수 있고, 필요하면 진행 중인 render를 버릴 수도 있어요. 대신 UI 일관성을 지키기 위해 DOM mutation은 tree 평가가 끝난 뒤로 미뤄요. 1편에서 render와 commit을 나눴다면, 여기서는 그 분리가 진짜 능력이 되는 거예요. 그리고 그 순간 purity는 예쁜 원칙이 아니라 사실상 전제가 돼요. render가 바깥세상에 흔적을 남기면, React는 계산을 끊고 다시 시작할 자유를 잃어버리니까요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "8fd2e23a-f85b-43d4-8bd4-eddacae2ebda",
+      "type": "heading",
+      "props": {
+        "textAlign": "left",
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "5. 그래서 function과 Hooks가 더 잘 맞았어요",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "66ce677e-deed-4b1d-a044-b8e0d428cdcb",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "이제 왜 React가 function과 Hooks를 주류 표면으로 밀어갔는지가 정리돼요. Hooks RFC는 꽤 솔직하게 말해요. stateful logic 재사용이 어렵고, 복잡한 컴포넌트는 이해하기 어려워지고, classes는 사람과 도구 모두에게 혼란을 준다고요. 그리고 핵심 문장이 하나 더 있어요. React 컴포넌트는 오래전부터 functions에 더 가까웠다는 거예요. Hooks는 React가 갑자기 취향을 바꿔서 밀어붙인 새 유행이 아니라, 원래 가고 있던 방향을 더 직접 드러낸 결과에 가까워요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "08d9c4e7-e697-477e-a222-44a4f03e7536",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "이 관점에서 보면 Rules of Hooks가 왜 \"항상 같은 순서로 호출하라\"고 말하는지도 이해돼요. 순서가 안정돼야 React가 여러 render 사이에서 Hook state를 올바르게 이어 붙일 수 있기 때문이죠. 그리고 Synchronizing with Effects나 You Might Not Need an Effect를 읽어 보면, effect는 lifecycle을 그대로 옮겨 놓은 게 아니라 React 바깥과 연결해야 할 때만 여는 문에 가까워요. React가 화면 계산의 중심을 render에 두고 싶어 했기 때문에, effect는 중심이 아니라 escape hatch가 된 거예요. function 컴포넌트와 Hooks는 바로 그 질서를 class보다 덜 비틀고 보여 줬어요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "1d06d4a9-155f-4c31-baf8-3c0d837c5c11",
+      "type": "heading",
+      "props": {
+        "textAlign": "left",
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "6. signal류와 갈라지는 자리도 결국 여기예요",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "3b4afe6c-3674-4dd4-803c-ebf9239c6e49",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "여기서 자연스럽게 \"굳이 이렇게 다시 계산하는 쪽으로 가야 했나?\"라는 질문이 나와요. 실제로 Sebastian Markbåge는 이 논점을 꽤 직접 정리해요. React를 둘러싼 반응성 논쟁에는 크게 mutable + change tracking과 immutability + referential equality라는 두 방향이 있고, React는 새 기능을 그 위에 쌓기 위해 후자를 더 밀어왔다고요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "2e39d193-9a4b-46aa-95a2-bc9dd55aa002",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "반면 signal 계열 라이브러리는 상태 변화가 읽힌 곳을 따라 자동으로 UI를 갱신하는 모델을 전면에 내세워요. 이쪽은 \"현재 입력으로부터 화면을 다시 계산한다\"보다 \"누가 이 값을 읽었는가\"를 더 세밀하게 기억하는 방식에 가깝죠. 근데 React는 같은 목표를 향해 가더라도 코어를 그 방향으로 완전히 바꾸기보다는, React Compiler처럼 기존 모델 위에서 자동 memoization을 붙이는 쪽을 택하고 있어요. React도 \"딱 필요한 부분만 다시 움직이고 싶다\"는 목표를 포기한 건 아니지만, 거기에 가는 방법으로는 여전히 재실행 가능한 render와 scheduling control 쪽을 더 선호하는 거예요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "32d9dbbf-6c4f-455e-bcfc-ef321bab1ad9",
+      "type": "heading",
+      "props": {
+        "textAlign": "left",
+        "level": 3
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "7. 정리하면",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "17a8c253-93c3-4183-aa12-4d16e0f56521",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "이번 편의 핵심은 이거예요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "b7952410-76a6-48bd-8ef3-e32eb95b7f13",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "React가 function 쪽으로 간 건 함수형 프로그래밍이 더 멋져 보여서가 아니었어요. React는 갈수록 render의 타이밍을 더 많이 쥐고 싶어 했고, 그러려면 render가 다시 실행해도 안전한 계산이어야 했어요. 같은 입력이면 같은 결과가 나와야 했고, render 도중 바깥세계를 건드리면 안 됐고, 화면을 결정하는 값은 React가 추적할 수 있는 흐름 안에 있어야 했죠. 그 조건은 class보다 function에서 훨씬 덜 억지스럽게 성립했어요. Design Principles, Fiber Architecture, Hooks RFC, 그리고 React v18을 한 줄로 놓고 보면, React가 왜 여기까지 왔는지가 꽤 선명하게 보여요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "9ffd5de4-92ee-45ce-b1f8-e9fda4a75199",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "그래서 저는 이번 편의 결론을 이렇게 두고 싶어요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "08f2222c-b2b2-4153-a1f9-3e303200f140",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "React에게 함수형은 유행이 아니라 필요였어요.\nrender purity는 보기 좋은 규칙이 아니라, React가 render의 타이밍을 가져오기 위해 꼭 필요했던 조건이었어요.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "5fd2a2f3-478d-477c-9457-5771d82a253e",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "그리고 여기서 다음 질문이 자연스럽게 이어져요.\n클라이언트 안에서조차 render를 이렇게까지 통제하고 싶어 했던 React는, 왜 결국 서버와 클라이언트의 경계까지 다시 만지게 되었을까요?",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "a1f2fc08-30de-4fed-b0ce-6904362ce3ec",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "그게 다음 글의 이야기겠죠.",
+          "marks": []
+        }
+      ],
+      "children": []
+    },
+    {
+      "id": "2ed93f57-c7b9-4085-b9cb-2f3cfe3f7d2d",
+      "type": "paragraph",
+      "props": {
+        "textAlign": "left"
+      },
+      "content": [],
+      "children": []
+    }
+  ],
+  "annotations": [],
+  "threads": [],
+  "versions": [
+    {
+      "id": "ver_vml59y9qbcpd",
+      "createdAt": "2026-04-05T15:00:26.443Z",
+      "note": "Document created",
+      "author": "system"
+    }
+  ],
+  "metadata": {
+    "createdAt": "2026-04-05T15:00:26.443Z",
+    "updatedAt": "2026-04-05T15:28:04.127Z",
+    "tags": []
+  }
+}

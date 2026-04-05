@@ -1,0 +1,357 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cowrite.local/schema/writer-doc.schema.json",
+  "title": "Cowrite Writer Document",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "docId",
+    "title",
+    "activePersonaId",
+    "blocks",
+    "annotations",
+    "threads",
+    "versions",
+    "metadata"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "docId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "activePersonaId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blocks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/block"
+      }
+    },
+    "annotations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/annotation"
+      }
+    },
+    "threads": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/thread"
+      }
+    },
+    "versions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/version"
+      }
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    }
+  },
+  "$defs": {
+    "mark": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "bold",
+            "italic",
+            "underline",
+            "strike",
+            "highlight"
+          ]
+        },
+        "attrs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "textNode": {
+      "type": "object",
+      "required": [
+        "type",
+        "text",
+        "marks"
+      ],
+      "properties": {
+        "type": {
+          "const": "text"
+        },
+        "text": {
+          "type": "string"
+        },
+        "marks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/mark"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "block": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "props",
+        "content",
+        "children"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "paragraph",
+            "heading",
+            "bulletListItem",
+            "numberedListItem",
+            "quote"
+          ]
+        },
+        "props": {
+          "type": "object",
+          "properties": {
+            "textAlign": {
+              "enum": [
+                "left",
+                "center",
+                "right"
+              ]
+            },
+            "level": {
+              "enum": [
+                1,
+                2,
+                3
+              ]
+            },
+            "tone": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/textNode"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/block"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "annotation": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "anchor",
+        "createdAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "highlight",
+            "selection"
+          ]
+        },
+        "anchor": {
+          "type": "object",
+          "required": [
+            "blockId",
+            "start",
+            "end",
+            "quote"
+          ],
+          "properties": {
+            "blockId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "start": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "end": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "quote": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "threadId": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "comment": {
+      "type": "object",
+      "required": [
+        "id",
+        "authorId",
+        "role",
+        "body",
+        "createdAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "user",
+            "assistant",
+            "system"
+          ]
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "thread": {
+      "type": "object",
+      "required": [
+        "id",
+        "resolved",
+        "comments"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "annotationId": {
+          "type": "string"
+        },
+        "resolved": {
+          "type": "boolean"
+        },
+        "comments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/comment"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "version": {
+      "type": "object",
+      "required": [
+        "id",
+        "createdAt",
+        "note",
+        "author"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        },
+        "author": {
+          "enum": [
+            "user",
+            "assistant",
+            "system"
+          ]
+        },
+        "patchId": {
+          "type": "string"
+        },
+        "snapshotRef": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "createdAt",
+        "updatedAt",
+        "tags"
+      ],
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "archived": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

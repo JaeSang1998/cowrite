@@ -1,0 +1,23 @@
+{
+  "name": "cowrite",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "check:desktop-env": "./scripts/check-desktop-env.sh",
+    "dev": "./scripts/check-desktop-env.sh && cd apps/desktop && bun run tauri:dev",
+    "build": "cd packages/writer-core && bun run build && cd ../writer-storage && bun run build && cd ../writer-ai && bun run build && cd ../writer-ui && bun run build && cd ../../apps/desktop && bun run build && cd ../../packages/writer-mcp && bun run build",
+    "typecheck": "cd packages/writer-core && bun run typecheck && cd ../writer-storage && bun run typecheck && cd ../writer-ai && bun run typecheck && cd ../writer-ui && bun run typecheck && cd ../../apps/desktop && bun run typecheck && cd ../../packages/writer-mcp && bun run typecheck",
+    "dev:desktop": "./scripts/check-desktop-env.sh && cd apps/desktop && bun run tauri:dev",
+    "dev:web": "cd apps/desktop && bun run dev",
+    "dev:mcp": "cd packages/writer-mcp && bun run dev"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}

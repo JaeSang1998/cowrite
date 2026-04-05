@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: "Georgia", "Noto Serif KR", serif;
+    --font-ui: "Inter", "Pretendard", -apple-system, "Segoe UI", sans-serif;
+
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 40 6% 96%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 40 6% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-ui);
+    margin: 0;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  ::selection {
+    background: hsl(40 80% 70% / 0.3);
+  }
+}
+
+@layer components {
+  @keyframes agent-selection-sweep {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .agent-selection-fragment--sweep {
+    animation: agent-selection-sweep 600ms ease-out forwards;
+  }
+
+  .bn-container,
+  .bn-editor {
+    background: transparent !important;
+    color: hsl(var(--foreground));
+  }
+
+  .bn-editor {
+    min-height: 60vh;
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    line-height: 1.85;
+    letter-spacing: -0.01em;
+  }
+
+  /* Dynamic editor typography via CSS custom properties */
+  [data-editor-container] .bn-editor,
+  [data-editor-container] .bn-editor [class*="bn-block"],
+  [data-editor-container] .bn-editor [class*="bn-inline-content"],
+  [data-editor-container] .bn-editor p,
+  [data-editor-container] .bn-editor h1,
+  [data-editor-container] .bn-editor h2,
+  [data-editor-container] .bn-editor h3,
+  [data-editor-container] .bn-editor li,
+  [data-editor-container] .bn-editor blockquote {
+    font-family: var(--editor-font-family) !important;
+    font-size: var(--editor-font-size) !important;
+    line-height: var(--editor-line-height) !important;
+    letter-spacing: var(--editor-letter-spacing) !important;
+  }
+
+  [data-editor-container] .bn-editor h1 {
+    font-size: calc(var(--editor-font-size) * 1.8) !important;
+  }
+  [data-editor-container] .bn-editor h2 {
+    font-size: calc(var(--editor-font-size) * 1.4) !important;
+  }
+  [data-editor-container] .bn-editor h3 {
+    font-size: calc(var(--editor-font-size) * 1.15) !important;
+  }
+
+  /* Block drag handle elements (appended to body) */
+  .block-drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.7;
+    transform: scale(0.97);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    background: white;
+  }
+
+  .block-drag-indicator {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    height: 2px;
+    background: hsl(220, 80%, 55%);
+    border-radius: 1px;
+    transition: top 60ms ease-out, left 60ms ease-out, width 60ms ease-out;
+  }
+
+  .bn-toolbar {
+    border-radius: var(--radius);
+  }
+
+  /* Find & Replace highlights */
+  .search-highlight {
+    background-color: rgba(255, 200, 50, 0.4);
+    border-radius: 2px;
+  }
+
+  .search-highlight-selected {
+    background-color: rgba(99, 102, 241, 0.3);
+    border-radius: 2px;
+    outline: 1px solid rgba(99, 102, 241, 0.5);
+  }
+
+  .search-highlight-active {
+    background-color: rgba(255, 150, 0, 0.6);
+    border-radius: 2px;
+    outline: 1px solid rgba(255, 150, 0, 0.8);
+  }
+
+  .search-highlight-active.search-highlight-selected {
+    background-color: rgba(99, 102, 241, 0.5);
+    outline: 2px solid rgba(99, 102, 241, 0.8);
+  }
+}

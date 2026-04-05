@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "writer-mcp": {
+      "command": "npm",
+      "args": ["run", "dev:mcp"],
+      "cwd": "/Users/ijaesang/Documents/Workspace/cowrite"
+    }
+  }
+}

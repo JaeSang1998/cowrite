@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+target
+src-tauri/target
+*.log
+.turbo
+.idea
+.vscode
+coverage
+.writer
+draft.writer.json
+

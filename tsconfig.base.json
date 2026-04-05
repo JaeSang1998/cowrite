@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "useDefineForClassFields": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cowrite/writer-ai": [
+        "packages/writer-ai/src/index.ts"
+      ],
+      "@cowrite/writer-core": [
+        "packages/writer-core/src/index.ts"
+      ],
+      "@cowrite/writer-mcp": [
+        "packages/writer-mcp/src/index.ts"
+      ],
+      "@cowrite/writer-storage": [
+        "packages/writer-storage/src/index.ts"
+      ],
+      "@cowrite/writer-ui": [
+        "packages/writer-ui/src/index.ts"
+      ]
+    }
+  }
+}
+
