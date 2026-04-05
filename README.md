@@ -5,8 +5,6 @@
   <p>Cowrite is an AI-native desktop editor that lets Claude Code work on structured documents through MCP instead of brittle DOM automation.</p>
   <p>
     <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square" />
-    <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square" />
-    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square" />
     <img alt="MCP" src="https://img.shields.io/badge/MCP-Ready-111111?style=flat-square" />
     <img alt="Local-first" src="https://img.shields.io/badge/Storage-Local--first-0F766E?style=flat-square" />
   </p>
@@ -38,7 +36,7 @@ Most AI writing tools optimize for one-shot generation. Cowrite is built for ite
 - **Comment threads and annotations** to anchor feedback to specific parts of a document.
 - **Preview-first rewrites** so AI suggestions can be inspected before they are applied.
 - **Local MCP server** that exposes document, persona, patch, and thread operations to Claude Code.
-- **Monorepo separation** between desktop UI, canonical document model, storage, and MCP surface.
+- **Shared canonical document model** across the desktop app, storage layer, and MCP surface.
 
 ## Architecture
 
@@ -50,7 +48,7 @@ flowchart LR
   MCP <--> Files
 ```
 
-Cowrite keeps the editing experience inside the app while exposing a controlled MCP layer for AI-assisted changes. The desktop app and `writer-mcp` both operate on the same local document model, so the agent sees meaningful structure instead of a browser surface.
+Cowrite keeps the editing experience inside a Tauri desktop app with a BlockNote-based editor while exposing a controlled MCP layer for AI-assisted changes. The desktop app and `writer-mcp` both operate on the same local document model, so the agent sees meaningful structure instead of a browser surface.
 
 ## Monorepo Layout
 
@@ -63,18 +61,6 @@ Cowrite keeps the editing experience inside the app while exposing a controlled 
 | `packages/writer-mcp` | Local stdio MCP server used by Claude Code |
 | `packages/writer-storage` | Filesystem persistence and snapshots |
 | `packages/writer-ui` | Shared React UI components |
-
-## Tech Stack
-
-| Layer | Tech |
-| --- | --- |
-| App shell | Tauri 2 |
-| UI | React 19 + Tailwind |
-| Editor | BlockNote |
-| State | Zustand |
-| AI bridge | Model Context Protocol (MCP) |
-| Languages | TypeScript + Rust |
-| Runtime | Bun |
 
 ## Getting Started
 
