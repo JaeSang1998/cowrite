@@ -2,7 +2,7 @@
 
 <div align="center">
   <p><strong>Persona-aware writing, local-first documents, and preview-first AI editing.</strong></p>
-  <p>Cowrite is an AI-native desktop writing environment where Claude Code edits structured documents through MCP instead of brittle DOM automation.</p>
+  <p>Cowrite is an AI-native desktop writing environment where Claude Desktop and Claude Code edit structured documents through MCP instead of brittle DOM automation.</p>
   <p>
     <img alt="Tauri 2" src="https://img.shields.io/badge/Tauri-2-24C8DB?style=flat-square" />
     <img alt="MCP Ready" src="https://img.shields.io/badge/MCP-Ready-111111?style=flat-square" />
@@ -14,6 +14,7 @@
     <a href="#what-you-get">What You Get</a> ·
     <a href="#quick-start">Quick Start</a> ·
     <a href="#architecture">Architecture</a> ·
+    <a href="#using-cowrite-from-claude-desktop">Claude Desktop</a> ·
     <a href="#using-cowrite-from-claude-code">Claude Code</a>
   </p>
 </div>
@@ -25,7 +26,7 @@
 
 - Cowrite is built for iterative writing, not one-shot text generation.
 - The desktop app owns the editor, review flow, and version history.
-- Claude Code works through `writer-mcp`, so it edits blocks, selections, comments, and patches instead of scraping the browser.
+- Claude Desktop and Claude Code work through `writer-mcp`, so they edit blocks, selections, comments, and patches instead of scraping the browser.
 - Documents stay local as structured JSON, while personas and feedback signals stay on the same machine.
 - AI changes are previewed before apply, with explicit accept and reject paths.
 
@@ -38,10 +39,16 @@ bun install
 bun run dev
 ```
 
-If you only want the local MCP server:
+If you only want the local stdio MCP server for Claude Desktop or Claude Code:
 
 ```bash
 bun run dev:mcp
+```
+
+If you want the local streamable HTTP endpoint for MCP Inspector or another HTTP-capable client:
+
+```bash
+bun run dev:mcp:http
 ```
 
 If you want the browser-only UI during frontend work:
@@ -65,7 +72,7 @@ Most AI writing tools optimize for generation. Cowrite is designed for revision.
 - A persona studio for tone controls, phrase preferences, hard rules, and style examples.
 - Annotation-linked threads so feedback can stay attached to specific parts of a document.
 - Preview-first rewrites that can be inspected before they touch the draft.
-- A local `writer-mcp` server that gives Claude Code a safe, structured editing surface.
+- A local `writer-mcp` server that gives Claude Desktop and Claude Code a safe, structured editing surface.
 - A shared canonical document model across the desktop app, MCP server, and storage layer.
 - Version snapshots, Markdown export, and feedback signals that can later refine persona behavior.
 
@@ -76,12 +83,12 @@ flowchart LR
   Writer["Writer"] --> Desktop["Cowrite desktop app"]
   Desktop <--> Doc["Local document<br/>*.writer.json"]
   Desktop <--> Home["~/.writer<br/>personas<br/>preferences<br/>versions<br/>exports"]
-  Claude["Claude Code"] <--> MCP["writer-mcp<br/>stdio MCP server"]
+  Claude["Claude Desktop / Claude Code"] <--> MCP["writer-mcp<br/>stdio MCP server"]
   MCP <--> Doc
   MCP <--> Home
 ```
 
-Cowrite separates the writing experience from the AI control surface. The desktop app owns the editor and review UX, `writer-core` owns the document and patch model, `writer-storage` owns local persistence, and `writer-mcp` exposes safe operations to Claude Code.
+Cowrite separates the writing experience from the AI control surface. The desktop app owns the editor and review UX, `writer-core` owns the document and patch model, `writer-storage` owns local persistence, and `writer-mcp` exposes safe operations to Claude clients through MCP.
 
 ### Editing Loop
 
@@ -107,7 +114,7 @@ The important design choice is that the agent never becomes the editor. It propo
 | `packages/writer-core` | Canonical document schema, block adapters, persona models, patch types |
 | `packages/writer-storage` | Local filesystem workspace, snapshots, export paths, bootstrap logic |
 | `packages/writer-ai` | Prompt builders and rewrite helpers |
-| `packages/writer-mcp` | Local stdio MCP server used by Claude Code |
+| `packages/writer-mcp` | Local stdio MCP server used by Claude Desktop and Claude Code |
 | `packages/writer-ui` | Shared React UI primitives |
 
 ## Getting Started
@@ -141,11 +148,21 @@ bun run check:desktop-env
 bun run dev
 ```
 
-### Run the MCP server only
+### Run the stdio MCP server only
 
 ```bash
 bun run dev:mcp
 ```
+
+This command is intentionally quiet because stdio MCP servers wait for the client to initialize them.
+
+### Run the HTTP MCP endpoint
+
+```bash
+bun run dev:mcp:http
+```
+
+This exposes a streamable HTTP endpoint at `http://localhost:3001/mcp` for MCP Inspector or other HTTP-capable clients.
 
 ### Run the web UI only
 
@@ -159,6 +176,30 @@ bun run dev:web
 bun run build
 bun run typecheck
 ```
+
+## Using Cowrite from Claude Desktop
+
+Point Claude Desktop at the local stdio MCP server by updating `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "writer-mcp": {
+      "type": "stdio",
+      "command": "/bin/zsh",
+      "args": [
+        "-lc",
+        "cd /path/to/cowrite && bun run dev:mcp"
+      ],
+      "env": {}
+    }
+  }
+}
+```
+
+After saving the file, restart Claude Desktop and check Developer settings or the Connectors picker to confirm `writer-mcp` is connected and exposing tools like `document.list`.
+
+Do not add `http://localhost:3001/mcp` through Claude Desktop Connectors. Remote connectors are resolved by Anthropic's infrastructure, so `localhost` only works for clients running on your own machine.
 
 ## Using Cowrite from Claude Code
 
@@ -181,6 +222,7 @@ Point Claude Code at the local MCP server:
 - The MCP server works against a local `*.writer.json` document in its working directory by default.
 - Personas, preference signals, version snapshots, and exports live under `~/.writer/`.
 - The desktop app and MCP server share the same canonical document model, so the agent sees structure instead of DOM state.
+- Use `bun run dev:mcp:http` only for MCP Inspector or another client that explicitly supports streamable HTTP MCP on `localhost`.
 
 ### MCP Surface
 
@@ -198,7 +240,7 @@ Point Claude Code at the local MCP server:
 - Separate style shaping from meaning preservation.
 - Learn from behavior, not only from settings.
 - Keep review and approval in the product core, not as optional polish.
-- Treat Claude Code as a powerful collaborator, not the source of truth for document state.
+- Treat Claude as a powerful collaborator, not the source of truth for document state.
 
 ## License
 

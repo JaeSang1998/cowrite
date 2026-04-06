@@ -16,7 +16,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "dev:stdio": "tsx src/index.ts",
+    "dev:http": "tsx src/index.ts --http"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.10.2",
